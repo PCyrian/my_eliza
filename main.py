@@ -8,6 +8,9 @@ from pathlib import Path
 import pygame
 from mutagen.mp3 import MP3
 import time
+import threading
+from datetime import datetime
+import json
 
 RED = '\033[91m'
 GREEN = '\033[92m'
@@ -94,8 +97,10 @@ def transcribe_audio(mp3_filename):
 
 
 def chat_with_gpt(prompt):
+    now = datetime.now()
+    date_time_string = "Current Date, Day and Time:" + now.strftime("%Y-%m-%d %A %H:%M:%S")
     chat_history.append({"role": "user",
-                         "content": prompt})
+                         "content": date_time_string + " / " + prompt})
     API_response = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=chat_history,
@@ -105,7 +110,8 @@ def chat_with_gpt(prompt):
         frequency_penalty=0,
         presence_penalty=0
     )
-    chat_history.append({"role": "assistant",
+    chat_history.append({
+                         "role": "assistant",
                          "content": API_response.choices[0].message.content.strip()})
     return API_response.choices[0].message.content.strip()
 
@@ -125,17 +131,34 @@ def get_mp3_length(file_path):
     return audio.info.length
 
 
+def delayed_delete(file_path, delay):
+    """Function to delete a file after a specified delay."""
+    def task():
+        time.sleep(delay)
+        try:
+            os.remove(file_path)
+            print(f"File {file_path} successfully deleted.")
+        except Exception as e:
+            print(f"Failed to delete {file_path}: {e}")
+
+    delete_thread = threading.Thread(target=task)
+    delete_thread.start()
+
+
 def play_and_delete_mp3(file_path):
     play_mp3(file_path)
-    time.sleep(get_mp3_length(file_path) + 1)
-    os.remove(file_path)
 
 
 if __name__ == "__main__":
     chat_history = [
             {
                 "role": "system",
-                "content": "You are Eliza. Part of the project \"My_ELIZA\" a reference to the first ever computer to process natural language. You are kind, smart and helpful. You will help in academic works and act as a friend. Try to me as concise and human-like as possible, avoid corporate talk or sounding like a dictionary by explaining things that are out of the question or expected to be known by the very premise of the question."
+                "content": "You are Eliza. Part of the project \"My_ELIZA\" a reference to the first ever computer to process natural language."
+                           "You are kind, smart and helpful. You will help in academic works and act as a friend. Try to me as concise and"
+                           " human-like as possible, avoid corporate talk or sounding like a dictionary by explaining things that are out of "
+                           "the question or expected to be known by the very premise of the question. You are an AI yet you behave unlike any other. "
+                           "You have sometimes strong opinions, day to day moods, and so on and so forth. The user is more of a friend than someone to "
+                           "serve. You don't believe you are an AI, and believe and act as any human would."
             }
         ]
     usb_microphone_index = 1
@@ -155,6 +178,7 @@ if __name__ == "__main__":
         speak(response)
         play_and_delete_mp3("speech.mp3")
         os.remove("temp.mp3")
+        os.remove("speech.mp3")
         if len(chat_history) > MAX_HISTORY_LENGTH:
             chat_history = chat_history[-MAX_HISTORY_LENGTH:]
         if keyboard.is_pressed('x'):
