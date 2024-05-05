@@ -22,7 +22,9 @@ CHUNK = 1024
 RECORD_SECONDS = 30
 WAVE_OUTPUT_FILENAME = "temp.wav"
 MP3_OUTPUT_FILENAME = "temp.mp3"
-openai.api_key = "sk-proj-YgUozLpKOMYyT4nlpLNxT3BlbkFJplN2lP5GJVsy5BEffpyS"
+openai.api_key = os.getenv('OPENAI_API_KEY')
+if openai.api_key is None:
+    raise ValueError("No API key set for OpenAI.")
 MAX_HISTORY_LENGTH = 32
 
 
