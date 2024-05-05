@@ -22,7 +22,8 @@ CHUNK = 1024
 RECORD_SECONDS = 30
 WAVE_OUTPUT_FILENAME = "temp.wav"
 MP3_OUTPUT_FILENAME = "temp.mp3"
-openai.api_key = "sk-proj-aV08XjLAJ0aqYvUs2gIFT3BlbkFJtVx6gPusdsd5Z9LhKM4e"
+openai.api_key = "sk-proj-YgUozLpKOMYyT4nlpLNxT3BlbkFJplN2lP5GJVsy5BEffpyS"
+MAX_HISTORY_LENGTH = 32
 
 
 def play_mp3(file_path):
@@ -91,24 +92,19 @@ def transcribe_audio(mp3_filename):
 
 
 def chat_with_gpt(prompt):
+    chat_history.append({"role": "user",
+                         "content": prompt})
     API_response = openai.chat.completions.create(
         model="gpt-3.5-turbo",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are Eliza. Part of the project \"My_ELIZA\" a reference to the first ever computer to process natural language. You are kind, smart and helpful. You will help in academic works and act as a friend. Try to me as concise and human-like as possible, avoid corporate talk or sounding like a dictionary by explaining things that are out of the question or expected to be known by the very premise of the question."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            },
-        ],
+        messages=chat_history,
         temperature=1,
         max_tokens=363,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0
     )
+    chat_history.append({"role": "assistant",
+                         "content": API_response.choices[0].message.content.strip()})
     return API_response.choices[0].message.content.strip()
 
 
@@ -134,6 +130,12 @@ def play_and_delete_mp3(file_path):
 
 
 if __name__ == "__main__":
+    chat_history = [
+            {
+                "role": "system",
+                "content": "You are Eliza. Part of the project \"My_ELIZA\" a reference to the first ever computer to process natural language. You are kind, smart and helpful. You will help in academic works and act as a friend. Try to me as concise and human-like as possible, avoid corporate talk or sounding like a dictionary by explaining things that are out of the question or expected to be known by the very premise of the question."
+            }
+        ]
     usb_microphone_index = 1
     while True:
         print(BLUE + "Press and hold SPACE to start recording..." + RESET)
@@ -151,6 +153,8 @@ if __name__ == "__main__":
         speak(response)
         play_and_delete_mp3("speech.mp3")
         os.remove("temp.mp3")
+        if len(chat_history) > MAX_HISTORY_LENGTH:
+            chat_history = chat_history[-MAX_HISTORY_LENGTH:]
         if keyboard.is_pressed('x'):
             break
         else:
