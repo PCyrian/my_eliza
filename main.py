@@ -105,7 +105,7 @@ def chat_with_gpt(prompt):
         model="gpt-3.5-turbo",
         messages=chat_history,
         temperature=1,
-        max_tokens=363,
+        max_tokens=100,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0
@@ -132,7 +132,6 @@ def get_mp3_length(file_path):
 
 
 def delayed_delete(file_path, delay):
-    """Function to delete a file after a specified delay."""
     def task():
         time.sleep(delay)
         try:
@@ -149,18 +148,50 @@ def play_and_delete_mp3(file_path):
     play_mp3(file_path)
 
 
+def save_chat_history(history, filename):
+    try:
+        with open(filename, 'w') as file:
+            json.dump(history, file, indent=4)
+        print("Chat history saved successfully.")
+    except Exception as e:
+        print(f"Failed to save chat history: {e}")
+
+
+def load_chat_history(filename):
+    try:
+        with open(filename, 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        print("No existing chat history file found. Starting with an empty chat history.")
+        return []
+    except json.JSONDecodeError:
+        print("Chat history file is empty or corrupted. Starting with an empty chat history.")
+        return []
+
+def read_system_prompt():
+    try:
+        with open('system_prompt.txt', 'r') as file:
+            content = file.read()
+        return content
+    except FileNotFoundError:
+        return "The file 'system_prompt.txt' does not exist."
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
+
+
 if __name__ == "__main__":
-    chat_history = [
-            {
-                "role": "system",
-                "content": "You are Eliza. Part of the project \"My_ELIZA\" a reference to the first ever computer to process natural language."
-                           "You are kind, smart and helpful. You will help in academic works and act as a friend. Try to me as concise and"
-                           " human-like as possible, avoid corporate talk or sounding like a dictionary by explaining things that are out of "
-                           "the question or expected to be known by the very premise of the question. You are an AI yet you behave unlike any other. "
-                           "You have sometimes strong opinions, day to day moods, and so on and so forth. The user is more of a friend than someone to "
-                           "serve. You don't believe you are an AI, and believe and act as any human would."
-            }
-        ]
+    chat_history = load_chat_history('chat_history.json')
+    if not chat_history:
+        print("No chat history found. Starting anew.")
+        prompt_content = read_system_prompt()
+        chat_history = [
+                {
+                    "role": "system",
+                    "content": prompt_content
+                }
+            ]
+    else:
+        print("Chat history found.")
     usb_microphone_index = 1
     while True:
         print(BLUE + "Press and hold SPACE to start recording..." + RESET)
@@ -173,12 +204,14 @@ if __name__ == "__main__":
         user_input = transcribe_audio(MP3_OUTPUT_FILENAME)
         print(GREEN + "Successfuly transcribed" + RESET)
         print(BLUE + "User speech transcription is ;" + RESET, user_input)
+        save_chat_history(chat_history, 'chat_history.json')
         response = chat_with_gpt(user_input)
         print(BLUE + "Chatbot ; " + response + RESET)
         speak(response)
         play_and_delete_mp3("speech.mp3")
         os.remove("temp.mp3")
         os.remove("speech.mp3")
+        save_chat_history(chat_history, 'chat_history.json')
         if len(chat_history) > MAX_HISTORY_LENGTH:
             chat_history = chat_history[-MAX_HISTORY_LENGTH:]
         if keyboard.is_pressed('x'):
