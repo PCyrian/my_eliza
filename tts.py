@@ -2,6 +2,7 @@ import torch
 from pathlib import Path
 from TTS.api import TTS
 from utilities import save_wave_as_mp3
+from pydub import AudioSegment
 import logging
 import openai
 
@@ -18,6 +19,22 @@ class TextToSpeech:
         tts.tts_to_file(text=text, file_path=TTS_WAVE_OUTPUT_FILENAME)
         save_wave_as_mp3(TTS_WAVE_OUTPUT_FILENAME, TTS_MP3_OUTPUT_FILENAME)
 
+    def tts_local_voice_cloning(self, text, speaker_file):
+        if speaker_file is None:
+            print("speaker_file is None")
+            return None
+        file_extension = speaker_file[-4:]
+        print("file_extension : ", file_extension)
+        print("speaker_file : ", speaker_file)
+        if file_extension == ".mp3":
+            audio = AudioSegment.from_mp3("input_file.mp3")
+            audio.export("output_file.wav", format="wav")
+            print("Conversion from MP3 to WAV completed successfully.")
+
+        tts = TTS(model_name="tts_models/multilingual/multi-dataset/your_tts", progress_bar=False).to(self.device)
+        tts.tts_to_file(text, speaker_wav=speaker_file, language="en", file_path=TTS_WAVE_OUTPUT_FILENAME)
+        save_wave_as_mp3(TTS_WAVE_OUTPUT_FILENAME, TTS_MP3_OUTPUT_FILENAME)
+
     def tts_openai(self, text, voice):
         speech_file_path = Path(__file__).parent / TTS_MP3_OUTPUT_FILENAME
         try:
@@ -31,10 +48,12 @@ class TextToSpeech:
         except Exception as e:
             logging.error(f"Error creating speech: {e}")
 
-    def tts_synthesis(self, text: str, tts_option: str):
+    def tts_synthesis(self, text: str, tts_option: str, speaker_file: str):
         if tts_option == 'OpenAI TTS nova':
             self.tts_openai(text, 'nova')
         elif tts_option == 'OpenAI TTS alloy':
             self.tts_openai(text, 'alloy')
+        elif tts_option == 'Local voice cloning':
+            self.tts_local_voice_cloning(text, speaker_file)
         elif tts_option == 'Local TTS':
             self.tts_local_female(text)

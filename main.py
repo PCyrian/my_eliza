@@ -19,7 +19,8 @@ gui = GUI(root, audio_input_devices)
 chatbot = AudioChatbot(
     microphone_index=0,
     chat_history_file="chat_history.json",
-    add_message_to_gui=gui.add_message_to_gui
+    add_message_to_gui=gui.add_message_to_gui,
+    selected_speaker_file=gui.selected_speaker_file
 )
 
 chatbot.selected_llm = gui.selected_llm

@@ -12,7 +12,7 @@ from audio import Audio
 from tts import TextToSpeech
 
 class AudioChatbot:
-    def __init__(self, microphone_index: int, chat_history_file: str, add_message_to_gui):
+    def __init__(self, microphone_index: int, chat_history_file: str, add_message_to_gui, selected_speaker_file):
         self.microphone_index = microphone_index
         self.chat_history_file = chat_history_file
         self.chat_history = self.load_chat_history()
@@ -27,6 +27,7 @@ class AudioChatbot:
         self.add_message_to_gui = add_message_to_gui
         self.selected_llm = None
         self.selected_tts = None
+        self.selected_speaker_file = selected_speaker_file
 
     def play_mp3(self, file_path: str) -> None:
         def play_audio():
@@ -126,7 +127,7 @@ class AudioChatbot:
         else:
             self.start_recording()
 
-    def process_audio(self):
+    def process_audio(self) -> None:
         transcription = self.transcribe_audio()
         if transcription:
             print(f"Transcription: {transcription}")
@@ -136,7 +137,7 @@ class AudioChatbot:
             print(f"LLM Response: {response}")
             self.add_message_to_gui("my_Eliza", response + '\n')
 
-            self.tts.tts_synthesis(response, self.selected_tts.get())
+            self.tts.tts_synthesis(response, self.selected_tts.get(), self.selected_speaker_file.get())
             self.play_mp3(self.tts.output)
         else:
             print("No transcription available.")

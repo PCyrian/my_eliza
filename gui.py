@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from settings import save_settings
 import os
+from tkinter import filedialog
 
 stt_options = ["Whisper API", "Other TO BE IMPLEMENTED"]
 llm_options = ["gpt3.5-turbo API", "gpt-4o", "Local LLM TO BE IMPLEMENTED"]
@@ -13,9 +14,11 @@ class GUI:
         self.selected_stt = ctk.StringVar(value=stt_options[0])
         self.selected_llm = ctk.StringVar(value=llm_options[0])
         self.selected_tts = ctk.StringVar(value=tts_options[0])
+        self.selected_speaker_file = ctk.StringVar(value="")
         self.selected_audio_source = ctk.StringVar(value="")
         self.appearance_mode = ctk.StringVar(value="System")
         self.chat_display = None
+        self.file_button = None
         self.setup_gui(audio_input_devices)
 
     def setup_gui(self, audio_input_devices):
@@ -31,7 +34,7 @@ class GUI:
 
         tts_label = ctk.CTkLabel(self.root, text="Select TTS:")
         tts_label.place(x=1050, y=190)
-        tts_menu = ctk.CTkComboBox(self.root, variable=self.selected_tts, values=tts_options)
+        tts_menu = ctk.CTkComboBox(self.root, variable=self.selected_tts, values=tts_options, command=self.update_tts_option)
         tts_menu.place(x=1050, y=220)
 
         appearance_label = ctk.CTkLabel(self.root, text="Theme:")
@@ -59,10 +62,27 @@ class GUI:
         quit_button = ctk.CTkButton(self.root, text="Quit", command=self.quit_app)
         quit_button.place(relx=0.08, rely=0.95, anchor='center')
 
+        self.file_button = ctk.CTkButton(self.root, text="Select a speaker file", command=self.select_file)
+        self.file_button.place(x=1050, y=550)
+        self.file_button.place_forget()
+
+    def update_tts_option(self, _=None):
+        if self.selected_tts.get() == "Local voice cloning":
+            self.file_button.place(x=1050, y=550)
+        else:
+            self.file_button.place_forget()
+
+    def select_file(self):
+        file_path = filedialog.askopenfilename(title="Select a speaker file", filetypes=[("Audio Files", "*.wav *.mp3")])
+        if file_path:
+            print(f"Selected file: {file_path}")
+            self.selected_speaker_file.set(file_path)
+
     def print_selected_values(self):
         print(f"Selected STT: {self.selected_stt.get()}")
         print(f"Selected LLM: {self.selected_llm.get()}")
         print(f"Selected TTS: {self.selected_tts.get()}")
+        print(f"Selected speaker_file: {self.selected_speaker_file.get()}")
         print(f"Selected Audio Source: {self.selected_audio_source.get()}")
         save_settings(self.selected_stt, self.selected_llm, self.selected_tts, self.selected_audio_source, self.appearance_mode)
 
