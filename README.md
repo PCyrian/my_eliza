@@ -8,8 +8,6 @@
 4. [Usage](#usage)
 5. [Configuration](#configuration)
 6. [Dependencies](#dependencies)
-7. [Contributing](#contributing)
-8. [License](#license)
 
 ## Introduction
 
