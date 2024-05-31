@@ -3,6 +3,7 @@ from settings import load_settings, save_settings
 from gui import GUI
 from audio_chatbot import AudioChatbot
 from audio import Audio
+from daily_report import get_daily_report
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -14,11 +15,14 @@ root.geometry("1280x720")
 audio = Audio()
 audio_input_devices = audio.list_audio_input_devices()
 
+get_daily_report()
+
 gui = GUI(root, audio_input_devices)
 
 chatbot = AudioChatbot(
     microphone_index=0,
     chat_history_file="chat_history.json",
+    daily_report_file="daily_report.txt",
     add_message_to_gui=gui.add_message_to_gui,
     selected_speaker_file=gui.selected_speaker_file
 )

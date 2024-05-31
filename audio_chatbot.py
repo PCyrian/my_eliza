@@ -12,9 +12,10 @@ from audio import Audio
 from tts import TextToSpeech
 
 class AudioChatbot:
-    def __init__(self, microphone_index: int, chat_history_file: str, add_message_to_gui, selected_speaker_file):
+    def __init__(self, microphone_index: int, chat_history_file: str, daily_report_file: str, add_message_to_gui, selected_speaker_file):
         self.microphone_index = microphone_index
         self.chat_history_file = chat_history_file
+        self.daily_report_file = daily_report_file
         self.chat_history = self.load_chat_history()
         if not self.chat_history:
             logging.info("No chat history found. Starting anew.")
@@ -28,6 +29,18 @@ class AudioChatbot:
         self.selected_llm = None
         self.selected_tts = None
         self.selected_speaker_file = selected_speaker_file
+        self.import_daily_report()
+
+    def import_daily_report(self):
+        file_path = self.daily_report_file
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                content = file.read()
+                self.chat_history.append({"role": "system", "content": "The following is an automated daily report\n" + content})
+            return content
+        except Exception as e:
+            print(f"Error reading file: {e}")
+            return None
 
     def play_mp3(self, file_path: str) -> None:
         def play_audio():
@@ -79,7 +92,7 @@ class AudioChatbot:
         response = openai.chat.completions.create(model="gpt-3.5-turbo",
                                                   messages=self.chat_history,
                                                   temperature=1,
-                                                  max_tokens=100,
+                                                  max_tokens=400,
                                                   top_p=1,
                                                   frequency_penalty=0,
                                                   presence_penalty=0)
@@ -90,7 +103,7 @@ class AudioChatbot:
         response = openai.chat.completions.create(model="gpt-4o",
                                                   messages=self.chat_history,
                                                   temperature=1,
-                                                  max_tokens=100,
+                                                  max_tokens=400,
                                                   top_p=1,
                                                   frequency_penalty=0,
                                                   presence_penalty=0)
@@ -135,7 +148,7 @@ class AudioChatbot:
 
             response = self.chat_with_llm(transcription)
             print(f"LLM Response: {response}")
-            self.add_message_to_gui("my_Eliza", response + '\n')
+            self.add_message_to_gui("ELIZA", response + '\n')
 
             self.tts.tts_synthesis(response, self.selected_tts.get(), self.selected_speaker_file.get())
             self.play_mp3(self.tts.output)
