@@ -2,6 +2,8 @@ import os
 import json
 import customtkinter as ctk
 
+SETTINGS_PATH = "data/user_data/user_settings.json"
+
 stt_options = ["Whisper API", "Other TO BE IMPLEMENTED"]
 llm_options = ["gpt3.5-turbo API", "gpt-4o", "Local LLM TO BE IMPLEMENTED"]
 tts_options = ["OpenAI TTS nova", "OpenAI TTS alloy", "Local TTS", "Local voice cloning"]
@@ -9,8 +11,8 @@ tts_options = ["OpenAI TTS nova", "OpenAI TTS alloy", "Local TTS", "Local voice 
 
 def load_settings(selected_stt, selected_llm, selected_tts, selected_audio_source, appearance_mode):
     try:
-        if os.path.exists("user_settings.json"):
-            with open("user_settings.json", "r") as file:
+        if os.path.exists(SETTINGS_PATH):
+            with open(SETTINGS_PATH, "r") as file:
                 settings = json.load(file)
                 selected_stt.set(settings.get("selected_stt", stt_options[0]))
                 selected_llm.set(settings.get("selected_llm", llm_options[0]))
@@ -30,5 +32,5 @@ def save_settings(selected_stt, selected_llm, selected_tts, selected_audio_sourc
         "selected_audio_source": selected_audio_source.get(),
         "appearance_mode": appearance_mode.get(),
     }
-    with open("user_settings.json", "w") as file:
+    with open(SETTINGS_PATH, "w") as file:
         json.dump(settings, file)

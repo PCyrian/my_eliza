@@ -3,11 +3,12 @@ from settings import load_settings, save_settings
 from gui import GUI
 from audio_chatbot import AudioChatbot
 from audio import Audio
-from daily_report import get_daily_report
+from daily_report import get_daily_report, DAILY_REPORT_PATH
 from pydub import AudioSegment
 import os
 
 gui = None
+CHAT_HISTORY_PATH = "data/user_data/chat_history.json"
 
 
 try:
@@ -27,8 +28,8 @@ try:
 
     chatbot = AudioChatbot(
         microphone_index=0,
-        chat_history_file="chat_history.json",
-        daily_report_file="daily_report.txt",
+        chat_history_file=CHAT_HISTORY_PATH,
+        daily_report_file=DAILY_REPORT_PATH,
         add_message_to_gui=gui.add_message_to_gui,
         selected_speaker_file=gui.selected_speaker_file
     )
@@ -43,8 +44,9 @@ try:
 
     root.mainloop()
 except Exception as e:
+    os.remove("temp_files/*")
     error_message = f"\033[91m[ERROR] {e}\033[0m"
-    print(error_message)
+    print("The app Exitec with the error ;" + error_message)
     if gui == None:
         pass
     else:

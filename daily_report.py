@@ -2,6 +2,9 @@ import requests
 import feedparser
 
 
+DAILY_REPORT_PATH = "data/daily_reports/daily_report.txt"
+
+
 def get_current_location():
     try:
         response = requests.get('https://ipinfo.io')
@@ -104,7 +107,7 @@ def generate_daily_report():
 
 
 def save_report(report):
-    with open("daily_report.txt", "w", encoding="utf-8") as file:
+    with open(DAILY_REPORT_PATH, "w", encoding="utf-8") as file:
         file.write(report)
 
 
