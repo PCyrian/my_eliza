@@ -10,6 +10,11 @@ from pathlib import Path
 from typing import List, Dict
 from audio import Audio
 from tts import TextToSpeech
+from langdetect import detect, DetectorFactory
+from langdetect.lang_detect_exception import LangDetectException
+from utilities import save_wave_as_mp3, assure_language_continuity
+
+DetectorFactory.seed = 0
 
 class AudioChatbot:
     def __init__(self, microphone_index: int, chat_history_file: str, daily_report_file: str, add_message_to_gui, selected_speaker_file):
@@ -30,6 +35,8 @@ class AudioChatbot:
         self.selected_tts = None
         self.selected_speaker_file = selected_speaker_file
         self.import_daily_report()
+        self.transcription_done_event = threading.Event()
+        self.synthesis_done_event = threading.Event()
 
     def import_daily_report(self):
         file_path = self.daily_report_file
@@ -75,18 +82,35 @@ class AudioChatbot:
         with open(self.chat_history_file, "w") as file:
             json.dump(self.chat_history, file, indent=4)
 
-    def transcribe_audio(self) -> str:
+    def detect_language(self, transcription: str) -> str:
         try:
-            self.audio.save_wave_as_mp3()
-            with open(self.audio.output, "rb") as audio_file:
-                transcription = openai.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio_file
-                )
-                return transcription.text
-        except Exception as e:
-            logging.error(f"Error transcribing audio: {e}")
-            return None
+            language_code = detect(transcription)
+            return language_code
+        except LangDetectException:
+            return "unknown"
+
+    def transcribe_audio(self) -> str:
+        def run():
+            try:
+                self.audio.save_wave_as_mp3()
+                with open(self.audio.output, "rb") as audio_file:
+                    transcription = openai.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio_file
+                    )
+                    self.transcription_result = assure_language_continuity(self.chat_history, transcription.text)
+                self.transcription_done_event.set()
+
+            except Exception as e:
+                logging.error(f"Error transcribing audio: {e}")
+                self.transcription_result = None
+                self.transcription_done_event.set()
+
+        self.transcription_done_event.clear()
+        thread = threading.Thread(target=run)
+        thread.start()
+        self.transcription_done_event.wait()
+        return self.transcription_result
 
     def llm_gpt3_5_turbo(self, prompt: str):
         response = openai.chat.completions.create(model="gpt-3.5-turbo",
@@ -132,7 +156,7 @@ class AudioChatbot:
 
     def stop_recording(self):
         self.audio.stop_recording()
-        self.process_audio()
+        self.start_audio_processing()
 
     def toggle_recording(self):
         if self.audio.stream is not None:
@@ -150,8 +174,27 @@ class AudioChatbot:
             print(f"LLM Response: {response}")
             self.add_message_to_gui("ELIZA", response + '\n')
 
-            self.tts.tts_synthesis(response, self.selected_tts.get(), self.selected_speaker_file.get())
+            self.synthesis_done_event.clear()
+            tts_thread = threading.Thread(target=self.tts_synthesis, args=(response, self.selected_tts.get(), self.selected_speaker_file.get()))
+            tts_thread.start()
+            tts_thread.join()
             self.play_mp3(self.tts.output)
         else:
             print("No transcription available.")
             self.add_message_to_gui("System", "No transcription available.\n")
+
+    def start_audio_processing(self):
+        processing_thread = threading.Thread(target=self.process_audio)
+        processing_thread.start()
+
+    def tts_synthesis(self, text: str, tts_option: str, speaker_file: str):
+        if tts_option == 'OpenAI TTS nova':
+            self.tts.tts_openai(text, 'nova')
+        elif tts_option == 'OpenAI TTS alloy':
+            self.tts.tts_openai(text, 'alloy')
+        elif tts_option == 'Local voice cloning':
+            self.tts.tts_local_voice_cloning(text, speaker_file)
+        elif tts_option == 'Local TTS':
+            self.tts.tts_local_female(text)
+        self.synthesis_done_event.set()
+

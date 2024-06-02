@@ -5,7 +5,7 @@ from tkinter import filedialog
 
 stt_options = ["Whisper API", "Other TO BE IMPLEMENTED"]
 llm_options = ["gpt3.5-turbo API", "gpt-4o", "Local LLM TO BE IMPLEMENTED"]
-tts_options = ["OpenAI TTS nova", "OpenAI TTS alloy", "Local TTS", "Local voice cloning"]
+tts_options = ["OpenAI TTS nova", "OpenAI TTS alloy", "Local TTS", "Local voice cloning", "Enhanced voice cloning"]
 appearance_modes = ["System", "Light", "Dark"]
 
 class GUI:
@@ -67,7 +67,7 @@ class GUI:
         self.file_button.place_forget()
 
     def update_tts_option(self, _=None):
-        if self.selected_tts.get() == "Local voice cloning":
+        if self.selected_tts.get() == "Local voice cloning" or self.selected_tts.get() == "Enhanced voice cloning":
             self.file_button.place(x=1050, y=550)
         else:
             self.file_button.place_forget()

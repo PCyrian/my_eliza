@@ -3,8 +3,11 @@ from pathlib import Path
 from TTS.api import TTS
 from utilities import save_wave_as_mp3
 from pydub import AudioSegment
+import os
 import logging
+import time
 import openai
+import threading
 
 TTS_WAVE_OUTPUT_FILENAME = "temp_files/tts_output.wav"
 TTS_MP3_OUTPUT_FILENAME = "temp_files/tts_output.mp3"
@@ -13,10 +16,13 @@ class TextToSpeech:
     def __init__(self):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.output = TTS_MP3_OUTPUT_FILENAME
+        self.transcription_done_event = threading.Event()
+        self.synthesis_done_event = threading.Event()
 
     def tts_local_female(self, text):
-        tts = TTS(model_name="tts_models/en/ljspeech/tacotron2-DDC", progress_bar=True).to(self.device)
-        tts.tts_to_file(text=text, file_path=TTS_WAVE_OUTPUT_FILENAME)
+        tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2", progress_bar=True).to(self.device)
+
+        tts.tts_to_file(text=text, speaker_wav="voice_assets/speaker.wav", language="en", file_path=TTS_WAVE_OUTPUT_FILENAME)
         save_wave_as_mp3(TTS_WAVE_OUTPUT_FILENAME, TTS_MP3_OUTPUT_FILENAME)
 
     def tts_local_voice_cloning(self, text, speaker_file):
@@ -36,7 +42,7 @@ class TextToSpeech:
         save_wave_as_mp3(TTS_WAVE_OUTPUT_FILENAME, TTS_MP3_OUTPUT_FILENAME)
 
     def tts_openai(self, text, voice):
-        speech_file_path = Path(__file__).parent / TTS_MP3_OUTPUT_FILENAME
+        speech_file_path = TTS_MP3_OUTPUT_FILENAME
         try:
             response = openai.audio.speech.create(
                 model="tts-1",
@@ -49,11 +55,17 @@ class TextToSpeech:
             logging.error(f"Error creating speech: {e}")
 
     def tts_synthesis(self, text: str, tts_option: str, speaker_file: str):
-        if tts_option == 'OpenAI TTS nova':
-            self.tts_openai(text, 'nova')
-        elif tts_option == 'OpenAI TTS alloy':
-            self.tts_openai(text, 'alloy')
-        elif tts_option == 'Local voice cloning':
-            self.tts_local_voice_cloning(text, speaker_file)
-        elif tts_option == 'Local TTS':
-            self.tts_local_female(text)
+        def run(text, tts_option, speaker_file):
+            if tts_option == 'OpenAI TTS nova':
+                self.tts_openai(text, 'nova')
+            elif tts_option == 'OpenAI TTS alloy':
+                self.tts_openai(text, 'alloy')
+            elif tts_option == 'Local voice cloning':
+                self.tts_local_voice_cloning(text, speaker_file)
+            elif tts_option == 'Local TTS':
+                self.tts_local_female(text)
+
+        thread = threading.Thread(target=run, args=(text, tts_option, speaker_file))
+        thread.start()
+        thread.join()
+

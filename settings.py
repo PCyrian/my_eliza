@@ -6,16 +6,21 @@ stt_options = ["Whisper API", "Other TO BE IMPLEMENTED"]
 llm_options = ["gpt3.5-turbo API", "gpt-4o", "Local LLM TO BE IMPLEMENTED"]
 tts_options = ["OpenAI TTS nova", "OpenAI TTS alloy", "Local TTS", "Local voice cloning"]
 
+
 def load_settings(selected_stt, selected_llm, selected_tts, selected_audio_source, appearance_mode):
-    if os.path.exists("user_settings.json"):
-        with open("user_settings.json", "r") as file:
-            settings = json.load(file)
-            selected_stt.set(settings.get("selected_stt", stt_options[0]))
-            selected_llm.set(settings.get("selected_llm", llm_options[0]))
-            selected_tts.set(settings.get("selected_tts", tts_options[0]))
-            selected_audio_source.set(settings.get("selected_audio_source", ""))
-            appearance_mode.set(settings.get("appearance_mode", "System"))
-            ctk.set_appearance_mode(appearance_mode.get())
+    try:
+        if os.path.exists("user_settings.json"):
+            with open("user_settings.json", "r") as file:
+                settings = json.load(file)
+                selected_stt.set(settings.get("selected_stt", stt_options[0]))
+                selected_llm.set(settings.get("selected_llm", llm_options[0]))
+                selected_tts.set(settings.get("selected_tts", tts_options[0]))
+                selected_audio_source.set(settings.get("selected_audio_source", ""))
+                appearance_mode.set(settings.get("appearance_mode", "System"))
+                ctk.set_appearance_mode(appearance_mode.get())
+    except FileNotFoundError:
+        pass
+
 
 def save_settings(selected_stt, selected_llm, selected_tts, selected_audio_source, appearance_mode):
     settings = {

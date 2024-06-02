@@ -4,35 +4,48 @@ from gui import GUI
 from audio_chatbot import AudioChatbot
 from audio import Audio
 from daily_report import get_daily_report
+from pydub import AudioSegment
+import os
 
-ctk.set_appearance_mode("System")
-ctk.set_default_color_theme("blue")
+gui = None
 
-root = ctk.CTk()
-root.title("HUB : My_Eliza")
-root.geometry("1280x720")
 
-audio = Audio()
-audio_input_devices = audio.list_audio_input_devices()
+try:
+    ctk.set_appearance_mode("System")
+    ctk.set_default_color_theme("blue")
 
-get_daily_report()
+    root = ctk.CTk()
+    root.title("HUB : My_Eliza")
+    root.geometry("1280x720")
 
-gui = GUI(root, audio_input_devices)
+    audio = Audio()
+    audio_input_devices = audio.list_audio_input_devices()
 
-chatbot = AudioChatbot(
-    microphone_index=0,
-    chat_history_file="chat_history.json",
-    daily_report_file="daily_report.txt",
-    add_message_to_gui=gui.add_message_to_gui,
-    selected_speaker_file=gui.selected_speaker_file
-)
+    get_daily_report()
 
-chatbot.selected_llm = gui.selected_llm
-chatbot.selected_tts = gui.selected_tts
+    gui = GUI(root, audio_input_devices)
 
-chatbot_toggle_button = ctk.CTkButton(root, text="Speak", command=chatbot.toggle_recording)
-chatbot_toggle_button.place(x=1050, rely=0.85, anchor='center')
+    chatbot = AudioChatbot(
+        microphone_index=0,
+        chat_history_file="chat_history.json",
+        daily_report_file="daily_report.txt",
+        add_message_to_gui=gui.add_message_to_gui,
+        selected_speaker_file=gui.selected_speaker_file
+    )
 
-load_settings(gui.selected_stt, gui.selected_llm, gui.selected_tts, gui.selected_audio_source, gui.appearance_mode)
+    chatbot.selected_llm = gui.selected_llm
+    chatbot.selected_tts = gui.selected_tts
 
-root.mainloop()
+    chatbot_toggle_button = ctk.CTkButton(root, text="Speak", command=chatbot.toggle_recording)
+    chatbot_toggle_button.place(x=1050, rely=0.85, anchor='center')
+
+    load_settings(gui.selected_stt, gui.selected_llm, gui.selected_tts, gui.selected_audio_source, gui.appearance_mode)
+
+    root.mainloop()
+except Exception as e:
+    error_message = f"\033[91m[ERROR] {e}\033[0m"
+    print(error_message)
+    if gui == None:
+        pass
+    else:
+        save_settings(gui.selected_stt, gui.selected_llm, gui.selected_tts, gui.selected_audio_source, gui.appearance_mode)
