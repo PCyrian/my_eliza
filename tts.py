@@ -1,7 +1,7 @@
 import torch
 from pathlib import Path
 from TTS.api import TTS
-from utilities import save_wave_as_mp3
+from utilities import save_wave_as_mp3, detect_language
 from pydub import AudioSegment
 import os
 import logging
@@ -22,7 +22,10 @@ class TextToSpeech:
     def tts_local_female(self, text):
         tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2", progress_bar=True).to(self.device)
 
-        tts.tts_to_file(text=text, speaker_wav="voice_assets/speaker.wav", language="en", file_path=TTS_WAVE_OUTPUT_FILENAME)
+        if detect_language(text) == "fr":
+            tts.tts_to_file(text=text, speaker_wav="ressources/voice_assets/speaker1.wav", language="fr", file_path=TTS_WAVE_OUTPUT_FILENAME)
+        if detect_language(text) == "en":
+            tts.tts_to_file(text=text, speaker_wav="ressources/voice_assets/speaker1.wav", language="en", file_path=TTS_WAVE_OUTPUT_FILENAME)
         save_wave_as_mp3(TTS_WAVE_OUTPUT_FILENAME, TTS_MP3_OUTPUT_FILENAME)
 
     def tts_local_voice_cloning(self, text, speaker_file):

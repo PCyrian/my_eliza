@@ -14,8 +14,8 @@ def save_wave_as_mp3(wav_filename, mp3_filename):
 def detect_language(transcription: str) -> str:
     try:
         language_code = detect(transcription)
-        if language_code == "en" or language_code == "fr":
-            return language_code
+        if language_code == "fr":
+            return "fr"
         else:
             return "en"
     except LangDetectException:

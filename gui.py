@@ -1,3 +1,5 @@
+import sys
+
 import customtkinter as ctk
 from settings import save_settings
 import os
@@ -47,9 +49,6 @@ class GUI:
         audio_label.place(x=1050, y=330)
         audio_menu = ctk.CTkComboBox(self.root, variable=self.selected_audio_source, values=audio_input_devices)
         audio_menu.place(x=1050, y=360)
-
-        print_button = ctk.CTkButton(self.root, text="Print Selected Values", command=self.print_selected_values)
-        print_button.place(x=1050, y=400)
 
         delete_button = ctk.CTkButton(self.root, text="Delete History", command=self.delete_history)
         delete_button.place(x=1050, y=500)
@@ -105,6 +104,7 @@ class GUI:
             if os.path.exists("temp_files/" + temp_file):
                 os.remove("temp_files/" + temp_file)
         self.root.quit()
+        sys.exit(0)
 
     def add_message_to_gui(self, sender, message):
         self.chat_display.configure(state=ctk.NORMAL)
