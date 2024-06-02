@@ -44,9 +44,11 @@ try:
 
     root.mainloop()
 except Exception as e:
-    os.remove("temp_files/*")
+    os.remove("temp_files/temp.mp3")
+    os.remove("temp_files/temp.wav")
+    os.remove("temp_files/tts_output.mp3")
     error_message = f"\033[91m[ERROR] {e}\033[0m"
-    print("The app Exitec with the error ;" + error_message)
+    print("The app Exited with the error ;" + error_message)
     if gui == None:
         pass
     else:

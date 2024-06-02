@@ -54,7 +54,13 @@ class TextToSpeech:
         except Exception as e:
             logging.error(f"Error creating speech: {e}")
 
+    def clean_files(self):
+        folder = "./temp_files/"
+        for file in os.listdir(folder):
+            os.remove(f"{folder}/{file}")
+
     def tts_synthesis(self, text: str, tts_option: str, speaker_file: str):
+        self.clean_files()
         def run(text, tts_option, speaker_file):
             if tts_option == 'OpenAI TTS nova':
                 self.tts_openai(text, 'nova')

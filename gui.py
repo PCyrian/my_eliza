@@ -8,6 +8,7 @@ llm_options = ["gpt3.5-turbo API", "gpt-4o", "Local LLM TO BE IMPLEMENTED"]
 tts_options = ["OpenAI TTS nova", "OpenAI TTS alloy", "Local TTS", "Local voice cloning", "Enhanced voice cloning"]
 appearance_modes = ["System", "Light", "Dark"]
 
+
 class GUI:
     def __init__(self, root, audio_input_devices):
         self.root = root
@@ -50,9 +51,6 @@ class GUI:
         print_button = ctk.CTkButton(self.root, text="Print Selected Values", command=self.print_selected_values)
         print_button.place(x=1050, y=400)
 
-        launch_button = ctk.CTkButton(self.root, text="Launch", command=self.print_selected_values)
-        launch_button.place(x=1050, y=450)
-
         delete_button = ctk.CTkButton(self.root, text="Delete History", command=self.delete_history)
         delete_button.place(x=1050, y=500)
 
@@ -78,13 +76,14 @@ class GUI:
             print(f"Selected file: {file_path}")
             self.selected_speaker_file.set(file_path)
 
-    def print_selected_values(self):
-        print(f"Selected STT: {self.selected_stt.get()}")
-        print(f"Selected LLM: {self.selected_llm.get()}")
-        print(f"Selected TTS: {self.selected_tts.get()}")
-        print(f"Selected speaker_file: {self.selected_speaker_file.get()}")
-        print(f"Selected Audio Source: {self.selected_audio_source.get()}")
-        save_settings(self.selected_stt, self.selected_llm, self.selected_tts, self.selected_audio_source, self.appearance_mode)
+
+#    def print_selected_values(self):
+#        print(f"Selected STT: {self.selected_stt.get()}")
+#        print(f"Selected LLM: {self.selected_llm.get()}")
+#        print(f"Selected TTS: {self.selected_tts.get()}")
+#        print(f"Selected speaker_file: {self.selected_speaker_file.get()}")
+#        print(f"Selected Audio Source: {self.selected_audio_source.get()}")
+#        save_settings(self.selected_stt, self.selected_llm, self.selected_tts, self.selected_audio_source, self.appearance_mode)
 
     def delete_history(self):
         try:
@@ -103,8 +102,8 @@ class GUI:
         save_settings(self.selected_stt, self.selected_llm, self.selected_tts, self.selected_audio_source, self.appearance_mode)
         temp_files = ["temp.wav", "tts_output.wav", "tts_output.mp3", "temp.mp3"]
         for temp_file in temp_files:
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
+            if os.path.exists("temp_files/" + temp_file):
+                os.remove("temp_files/" + temp_file)
         self.root.quit()
 
     def add_message_to_gui(self, sender, message):
