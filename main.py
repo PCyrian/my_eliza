@@ -4,12 +4,13 @@ from gui import GUI
 from audio_chatbot import AudioChatbot
 from audio import Audio
 from daily_report import get_daily_report, DAILY_REPORT_PATH
-from pydub import AudioSegment
 import os
+import logging
 
 gui = None
 CHAT_HISTORY_PATH = "data/user_data/chat_history.json"
 
+logging.basicConfig(level=logging.ERROR)
 
 try:
     ctk.set_appearance_mode("System")
@@ -36,9 +37,10 @@ try:
 
     chatbot.selected_llm = gui.selected_llm
     chatbot.selected_tts = gui.selected_tts
+    chatbot.selected_stt = gui.selected_stt
 
     chatbot_toggle_button = ctk.CTkButton(root, text="Speak", command=chatbot.toggle_recording)
-    chatbot_toggle_button.place(x=1050, rely=0.85, anchor='center')
+    chatbot_toggle_button.place(relx=0.82, rely=0.85, anchor='center')
 
     load_settings(gui.selected_stt, gui.selected_llm, gui.selected_tts, gui.selected_audio_source, gui.appearance_mode)
 
